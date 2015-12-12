@@ -8,11 +8,32 @@ from functools import partial
 from urlparse import urlparse, urljoin
 
 try:
+    import cchardet as chardet
+except ImportError:
+    import chardet
+
+try:
     import botfv8
 except ImportError:
     botfv8 = None
 
 logger = logging.getLogger(__name__)
+
+
+def _decode(text):
+    try:
+        text = text.decode('UTF-8')
+    except (UnicodeDecodeError, UnicodeEncodeError):
+        try:
+            encoding = chardet.detect(text)['encoding']
+            text = text.decode(encoding)
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            try:
+                text = text.encode('UTF-8')
+                text = unicode(text, 'ascii', 'ignore')
+            except (UnicodeDecodeError, UnicodeEncodeError):
+                text = unicode(text, 'ascii', 'ignore')
+    return text
 
 
 class Response(requests.Response):
@@ -76,6 +97,36 @@ class Response(requests.Response):
         for e in soup.select('img[src]') + soup.select('script[src]') + soup.select('style[src]'):
             url = e.get('src')
             get_func(url)
+
+    def to_string(self, include_request=True, include_body=True):
+        content = list()
+
+        if include_request and self.request is not None:
+            content.append('%s %s' % (self.request.method, _decode(self.request.url)))
+            for key, value in self.request.headers.iteritems():
+                content.append('%s: %s' % (_decode(key), _decode(value)))
+            content.append('')
+
+        content.append('%s %s' % (self.status_code, _decode(self.url)))
+        for key, value in self.headers.iteritems():
+            content.append('%s: %s' % (_decode(key), _decode(value)))
+        content.append('')
+
+        if include_body:
+            allowed = False
+            content_type = self.headers.get('Content-Type', '').split('; ', 1)[0]
+            if content_type.startswith('text/'):
+                allowed = True
+            elif content_type == 'application/javascript':
+                allowed = True
+            elif int(self.headers.get('Content-Length', 0)) < 256*1024:
+                allowed = True
+            if allowed:
+                content.append(_decode(self.content))
+            else:
+                content.append('Content-Type not allowed for debug log')
+
+        return '\n'.join(content)
 
 
 def _runtime_error(message, method, url):
