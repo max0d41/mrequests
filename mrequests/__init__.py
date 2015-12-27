@@ -106,6 +106,9 @@ class Response(requests.Response):
             for key, value in self.request.headers.iteritems():
                 content.append('%s: %s' % (_decode(key), _decode(value)))
             content.append('')
+            if self.request.body:
+                content.append(self.request.body[:8192])
+                content.append('')
 
         content.append('%s %s' % (self.status_code, _decode(self.url)))
         for key, value in self.headers.iteritems():
@@ -119,7 +122,7 @@ class Response(requests.Response):
                 allowed = True
             elif content_type == 'application/javascript':
                 allowed = True
-            elif int(self.headers.get('Content-Length', 0)) < 256*1024:
+            elif int(self.headers.get('Content-Length', 0)) < 10*1024:
                 allowed = True
             if allowed:
                 content.append(_decode(self.content))
