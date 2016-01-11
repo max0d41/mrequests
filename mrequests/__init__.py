@@ -115,7 +115,7 @@ class Response(requests.Response):
             content.append('%s: %s' % (_decode(key), _decode(value)))
         content.append('')
 
-        if include_body:
+        if include_body and self.content is not None:
             allowed = False
             content_type = self.headers.get('Content-Type', '').split('; ', 1)[0]
             if content_type.startswith('text/'):
