@@ -82,6 +82,12 @@ class Response(requests.Response):
         url = self.urljoin(url)
         return self._session.delete(url, **self._prepare_kwargs(kwargs))
 
+    def get_cookies(self):
+        return self._session.get_cookies()
+
+    def set_cookies(self, cookies):
+        return self._session.set_cookies(cookies)
+
     def serialize_form(self, form):
         data = dict()
         for attr in form.find_all(lambda e: e.get('name', None) is not None or e.get('value', None) is not None):
@@ -229,6 +235,13 @@ class Session(requests.Session):
         resp = resp.get(submit_url, params=params, bypass_cloudflare=False, stream=stream, headers=headers, raise_for_status=raise_for_status, **kwargs)
         resp.cookies.set('__cfduid', resp.cookies.get('__cfduid'))
         return resp
+
+    def set_cookies(self, cookies):
+        for cookie in cookies:
+            self.session.cookies.set(**cookie)
+
+    def get_cookies(self):
+        return [{key: getattr(cookie, key) for key in ('version', 'name', 'value', 'port', 'domain', 'path', 'secure', 'expires', 'discard', 'comment', 'comment_url', 'rfc2109')} for cookie in self.cookies]
 
 
 def session():
