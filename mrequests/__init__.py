@@ -238,7 +238,7 @@ class Session(requests.Session):
 
     def set_cookies(self, cookies):
         for cookie in cookies:
-            self.session.cookies.set(**cookie)
+            self.cookies.set(**cookie)
 
     def get_cookies(self):
         return [{key: getattr(cookie, key) for key in ('version', 'name', 'value', 'port', 'domain', 'path', 'secure', 'expires', 'discard', 'comment', 'comment_url', 'rfc2109')} for cookie in self.cookies]
