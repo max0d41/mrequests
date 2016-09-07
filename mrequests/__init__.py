@@ -216,8 +216,8 @@ class Session(requests.Session):
             challenge_pass = re.search(r'name="pass" value="(.+?)"', resp.text).group(1)
 
             # Extract the arithmetic operation
-            js = re.search(r"setTimeout\(function\(\){\s+(var t,r,a,f.+?\r?\n[\s\S]+?a\.value =.+?)\r?\n", resp.text).group(1)
-            js = re.sub(r'a\.value =(.+?) \+ .+?;', r'\1', js)
+            js = re.search(r"setTimeout\(function\(\){\s+(var s,t,o,p,b,r,e,a,k,i,n,g,f.+?\r?\n[\s\S]+?a\.value =.+?)\r?\n", resp.text).group(1)
+            js = re.sub(r'a\.value = (parseInt\(.+?\)).+', r'\1', js)
             js = re.sub(r'\s{3,}[a-z](?: = |\.).+', '', js)
         except Exception:
             # Something is wrong with the page. This may indicate Cloudflare has changed their
