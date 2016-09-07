@@ -228,11 +228,13 @@ class Session(requests.Session):
 
         # Safely evaluate the Javascript expression
         js = re.sub(r"[\n\\']", "", js)
+        js = js.replace('return', '')
         answer = str(int(botfv8.execute(js)) + len(parsed_url.netloc))
 
-        params = {'jschl_vc': challenge, 'jschl_answer': answer, 'pass': challenge_pass}
         submit_url = '%s://%s/cdn-cgi/l/chk_jschl' % (parsed_url.scheme, parsed_url.netloc)
+        params = {'jschl_vc': challenge, 'jschl_answer': answer, 'pass': challenge_pass}
 
+        logger.info("Submitting cloudflare bypass: %r %r %r", submit_url, params, headers)
         resp = resp.get(submit_url, params=params, bypass_cloudflare=False, stream=stream, headers=headers, raise_for_status=raise_for_status, **kwargs)
         resp.cookies.set('__cfduid', resp.cookies.get('__cfduid'))
         return resp
