@@ -172,10 +172,11 @@ class Session(requests.Session):
         resp._session = self
         resp.__class__ = Response
 
-        if bypass_cloudflare and 'URL=/cdn-cgi/' in resp.headers.get('Refresh', '') and resp.headers.get('Server', '') == 'cloudflare-nginx':
-            cf_resp = self.solve_cf_challenge(resp, stream, headers, raise_for_status, kwargs)
-            if cf_resp is not None:
-                return cf_resp
+        if bypass_cloudflare and resp.headers.get('Server', '') == 'cloudflare-nginx':
+            if 'URL=/cdn-cgi/' in resp.headers.get('Refresh', '') or 'action="/cdn-cgi/' in resp.content:
+                cf_resp = self.solve_cf_challenge(resp, stream, headers, raise_for_status, kwargs)
+                if cf_resp is not None:
+                    return cf_resp
 
         if raise_for_status:
             try:
